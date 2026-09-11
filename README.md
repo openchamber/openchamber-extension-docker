@@ -8,39 +8,27 @@ It shells out to the `docker` binary on PATH using host execution permissions (`
 
 - `docker` CLI installed and accessible on PATH.
 - OpenChamber version 1.22.0 or higher.
-- Bun for building from source.
 
 ## Installation
 
 ### Option 1: Install from release archive (.zip)
 
 1. Download `docker-extension.zip` from the latest [GitHub Release](https://github.com/openchamber/openchamber-extension-docker/releases).
-2. Extract the ZIP archive into a directory on your machine.
-3. In OpenChamber, open Settings -> Extensions -> Add Local Extension.
-4. Select the extracted directory.
-5. Allow local agent execution when prompted.
+2. In OpenChamber, open Settings -> Extensions -> Add Extension.
+3. Select the downloaded `.zip` archive or extracted directory.
+4. Allow local agent execution when prompted.
 
-### Option 2: Install from Git source
+### Option 2: Install from Git repository
 
-1. Clone this repository:
+1. In OpenChamber, open Settings -> Extensions -> Add Extension.
+2. Provide the Git repository URL:
+   `https://github.com/openchamber/openchamber-extension-docker.git`
+   *(Or clone the repository locally and select the folder).*
+3. Allow local agent execution when prompted.
 
-```bash
-git clone git@github.com:openchamber/openchamber-extension-docker.git
-cd openchamber-extension-docker
-```
+## Development
 
-2. Install dependencies and build the extension panel:
-
-```bash
-bun install
-bun run bundle
-```
-
-3. In OpenChamber, open Settings -> Extensions -> Add Local Extension.
-4. Select the repository directory.
-5. Allow local agent execution when prompted.
-
-## Available scripts
+If you are modifying the extension source code:
 
 - `bun run bundle`: Bundles `panel/main.ts` into `panel/main.js`.
 - `bun run type-check`: Runs TypeScript type checking without emitting files.
