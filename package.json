@@ -1,0 +1,40 @@
+{
+  "name": "openchamber-docker",
+  "version": "0.1.0",
+  "description": "Docker extension for OpenChamber — manage containers, view logs, inspect resources, and exec commands.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "bundle": "openchamber-guest-bundle panel/main.ts panel/main.js",
+    "type-check": "tsc --noEmit",
+    "pack": "bun run bundle && tar -czf docker-extension.tar.gz package.json icon.svg panel/ agent/ README.md LICENSE && zip -r docker-extension.zip package.json icon.svg panel/ agent/ README.md LICENSE",
+    "clean": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "@openchamber/sdk": "^1.23.0"
+  },
+  "openchamber": {
+    "apiVersion": 1,
+    "engines": {
+      "openchamber": ">=1.22.0"
+    },
+    "contributes": {
+      "panel": {
+        "id": "docker",
+        "name": "Docker",
+        "icon": "icon.svg",
+        "entry": "panel/index.html"
+      },
+      "service": {
+        "entry": "agent/main.js",
+        "runtime": "host",
+        "permissions": {
+          "exec": [
+            "docker"
+          ]
+        }
+      },
+      "attach": false
+    }
+  }
+}
