@@ -12,10 +12,10 @@ It shells out to the `docker` binary on PATH using host execution permissions (`
 
 ## Installation
 
-### Option 1: Install from release archive (.zip or .tar.gz)
+### Option 1: Install from release archive (.zip)
 
-1. Download `docker-extension.zip` or `docker-extension.tar.gz` from the latest [GitHub Release](https://github.com/openchamber/openchamber-extension-docker/releases).
-2. Extract the archive into a directory on your machine.
+1. Download `docker-extension.zip` from the latest [GitHub Release](https://github.com/openchamber/openchamber-extension-docker/releases).
+2. Extract the ZIP archive into a directory on your machine.
 3. In OpenChamber, open Settings -> Extensions -> Add Local Extension.
 4. Select the extracted directory.
 5. Allow local agent execution when prompted.
@@ -44,11 +44,11 @@ bun run bundle
 
 - `bun run bundle`: Bundles `panel/main.ts` into `panel/main.js`.
 - `bun run type-check`: Runs TypeScript type checking without emitting files.
-- `bun run pack`: Creates `.tar.gz` and `.zip` archives ready for distribution.
+- `bun run pack`: Creates `docker-extension.zip` archive ready for distribution.
 
 ## CI/CD and Releases
 
-Pushing a version tag (e.g. `v0.1.0`) triggers the GitHub Actions workflow (`.github/workflows/release.yml`), which builds the extension and creates a new GitHub Release with attached `.zip` and `.tar.gz` archives.
+Pushing a version tag (e.g. `v0.1.0`) triggers the GitHub Actions workflow (`.github/workflows/release.yml`), which builds the extension and creates a new GitHub Release with the attached `docker-extension.zip` package.
 
 ```bash
 git tag v0.1.0

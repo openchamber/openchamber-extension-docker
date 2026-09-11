@@ -7,7 +7,7 @@
   "scripts": {
     "bundle": "openchamber-guest-bundle panel/main.ts panel/main.js",
     "type-check": "tsc --noEmit",
-    "pack": "bun run bundle && tar -czf docker-extension.tar.gz package.json icon.svg panel/ agent/ README.md LICENSE && zip -r docker-extension.zip package.json icon.svg panel/ agent/ README.md LICENSE",
+    "pack": "bun run bundle && zip -r docker-extension.zip package.json icon.svg panel/ agent/ README.md LICENSE",
     "clean": "node -e \"process.exit(0)\""
   },
   "dependencies": {
