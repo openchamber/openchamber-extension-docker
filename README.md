@@ -8,11 +8,27 @@ It shells out to the `docker` binary on PATH using host execution permissions (`
 
 - `docker` CLI installed and accessible on PATH.
 - OpenChamber version 1.22.0 or higher.
-- Bun for building.
+- Bun for building from source.
 
-## Quick start
+## Installation
 
-1. Clone or download this repository.
+### Option 1: Install from release archive (.zip or .tar.gz)
+
+1. Download `docker-extension.zip` or `docker-extension.tar.gz` from the latest [GitHub Release](https://github.com/openchamber/openchamber-extension-docker/releases).
+2. Extract the archive into a directory on your machine.
+3. In OpenChamber, open Settings -> Extensions -> Add Local Extension.
+4. Select the extracted directory.
+5. Allow local agent execution when prompted.
+
+### Option 2: Install from Git source
+
+1. Clone this repository:
+
+```bash
+git clone git@github.com:openchamber/openchamber-extension-docker.git
+cd openchamber-extension-docker
+```
+
 2. Install dependencies and build the extension panel:
 
 ```bash
@@ -21,7 +37,7 @@ bun run bundle
 ```
 
 3. In OpenChamber, open Settings -> Extensions -> Add Local Extension.
-4. Select this directory.
+4. Select the repository directory.
 5. Allow local agent execution when prompted.
 
 ## Available scripts
