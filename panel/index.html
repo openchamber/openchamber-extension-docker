@@ -448,25 +448,33 @@
       gap: 4px;
       margin-top: 4px;
     }
-    .docker-port {
-      height: 22px;
-      border: 0;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--primary, var(--oc-primary, currentColor)) 12%, transparent);
+    .docker-port,
+    .docker-port-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--primary, var(--oc-primary, currentColor)) 10%, transparent);
       color: var(--primary, var(--oc-primary, currentColor));
-      padding: 0 8px;
-      font: inherit;
-      font-size: 0.6875rem;
-      font-weight: 600;
+      border: 1px solid color-mix(in srgb, var(--primary, var(--oc-primary, currentColor)) 35%, transparent);
+      font-size: 0.7rem;
+      text-decoration: none;
       cursor: pointer;
+      box-sizing: border-box;
+      transition: background 140ms ease-out, border-color 140ms ease-out;
     }
     .docker-port:disabled,
     .docker-port[data-openable="false"] {
       opacity: 0.55;
       cursor: default;
     }
+    .docker-port:hover,
+    .docker-port-badge:hover,
     .docker-port[data-openable="true"]:hover {
       background: color-mix(in srgb, var(--primary, var(--oc-primary, currentColor)) 20%, transparent);
+      border-color: color-mix(in srgb, var(--primary, var(--oc-primary, currentColor)) 60%, transparent);
+      color: var(--primary, var(--oc-primary, currentColor));
+      text-decoration: none;
     }
     .docker-project {
       display: flex;

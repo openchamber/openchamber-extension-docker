@@ -552,18 +552,10 @@ const buildContainerRow = (c: ContainerRow): HTMLElement => {
     portsDiv.style.flexWrap = 'wrap';
     portsDiv.style.gap = '4px';
     portsDiv.style.marginTop = '4px';
-    portsDiv.style.marginLeft = '-6px';
 
     for (const p of c.ports) {
       const pLink = document.createElement('a');
       pLink.className = 'docker-port-badge';
-      pLink.style.fontSize = '0.7rem';
-      pLink.style.padding = '1px 6px';
-      pLink.style.borderRadius = '4px';
-      pLink.style.background = 'var(--oc-bg-subtle, rgba(255,255,255,0.06))';
-      pLink.style.color = 'var(--oc-text-link, #60a5fa)';
-      pLink.style.textDecoration = 'none';
-      pLink.style.cursor = 'pointer';
       const targetUrl = p.url || `http://localhost:${p.hostPort}`;
       pLink.href = targetUrl;
       pLink.target = '_blank';

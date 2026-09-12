@@ -77,60 +77,15 @@ export const renderStatsGroup = (stats: { cpu?: string; mem?: string; memPerc?: 
   group.className = 'docker-stats-group';
   if (!stats) return group;
 
-  const cpuVal = parsePercentage(stats.cpu);
-  const memVal = parsePercentage(stats.memPerc);
+  const cpuText = (stats.cpu || '0%').trim();
+  const rawMem = stats.mem || '0B';
+  const memText = rawMem.replace(/\s*\/\s*/g, '/').trim();
 
-  // CPU item
-  const cpuItem = document.createElement('div');
-  cpuItem.className = 'docker-stats-item';
+  const statsSpan = document.createElement('span');
+  statsSpan.className = 'docker-stats-text';
+  statsSpan.textContent = `CPU ${cpuText} · RAM ${memText}`;
 
-  const cpuLabel = document.createElement('span');
-  cpuLabel.className = 'docker-stats-label';
-  cpuLabel.textContent = 'CPU';
-
-  const cpuTrack = document.createElement('div');
-  cpuTrack.className = 'docker-stats-track';
-  const cpuFill = document.createElement('div');
-  cpuFill.className = 'docker-stats-fill';
-  cpuFill.style.width = `${cpuVal}%`;
-  cpuFill.dataset.level = getLevel(cpuVal);
-  cpuTrack.appendChild(cpuFill);
-
-  const cpuText = document.createElement('span');
-  cpuText.className = 'docker-stats-text';
-  cpuText.textContent = stats.cpu || '0%';
-
-  cpuItem.appendChild(cpuLabel);
-  cpuItem.appendChild(cpuTrack);
-  cpuItem.appendChild(cpuText);
-
-  // RAM item
-  const ramItem = document.createElement('div');
-  ramItem.className = 'docker-stats-item';
-
-  const ramLabel = document.createElement('span');
-  ramLabel.className = 'docker-stats-label';
-  ramLabel.textContent = 'RAM';
-
-  const ramTrack = document.createElement('div');
-  ramTrack.className = 'docker-stats-track';
-  const ramFill = document.createElement('div');
-  ramFill.className = 'docker-stats-fill';
-  ramFill.style.width = `${memVal}%`;
-  ramFill.dataset.level = getLevel(memVal);
-  ramTrack.appendChild(ramFill);
-
-  const ramText = document.createElement('span');
-  ramText.className = 'docker-stats-text';
-  ramText.textContent = stats.mem || '0B';
-
-  ramItem.appendChild(ramLabel);
-  ramItem.appendChild(ramTrack);
-  ramItem.appendChild(ramText);
-
-  group.appendChild(cpuItem);
-  group.appendChild(ramItem);
-
+  group.appendChild(statsSpan);
   return group;
 };
 

@@ -151,20 +151,10 @@ export const renderInspectView = (
     portsContainer.style.display = 'flex';
     portsContainer.style.flexWrap = 'wrap';
     portsContainer.style.gap = '6px';
-    portsContainer.style.marginLeft = '-6px';
 
     for (const p of data.ports) {
       const link = document.createElement('a');
       link.className = 'docker-port-badge';
-      link.style.fontSize = '0.75rem';
-      link.style.padding = '2px 6px';
-      link.style.borderRadius = '4px';
-      link.style.background = 'var(--oc-bg-subtle, rgba(255,255,255,0.08))';
-      link.style.color = 'var(--oc-text-link, #60a5fa)';
-      link.style.textDecoration = 'none';
-      link.style.cursor = 'pointer';
-      link.style.display = 'inline-flex';
-      link.style.alignItems = 'center';
       const targetUrl = p.url || `http://localhost:${p.hostPort}`;
       link.href = targetUrl;
       link.target = '_blank';
