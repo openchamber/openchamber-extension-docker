@@ -2,6 +2,7 @@
 // Inspect as tabs of the same screen.
 import { postJob } from '../shared/client.ts';
 import { el, setText, textButton } from '../shared/dom.ts';
+import { t } from '../shared/i18n.ts';
 import { isUp, label, portUrl, stateLine, toneOf } from '../shared/stacks.ts';
 import type { Container } from '../shared/types.ts';
 import { armButton, type App, type Tab } from './app.ts';
@@ -29,7 +30,7 @@ export const createContainerView = (app: App, initial: Container, tab: Tab): Con
   const getContainer = (): Container => current;
 
   const back = textButton('‹', () => app.goHome(), 'back');
-  back.title = 'All containers';
+  back.title = t('All containers');
   const dot = el('span', 'dot');
   const title = el('div', 'title');
   const subtitle = el('div', 'subtitle');

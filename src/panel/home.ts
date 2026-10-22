@@ -3,6 +3,7 @@
 import { mountMenu, type MenuHandle, type MenuItem } from '@openchamber/sdk/ui';
 
 import { el, reconcile, setText, textButton } from '../shared/dom.ts';
+import { t } from '../shared/i18n.ts';
 import { formatBytes, formatDisk, formatPercent, plural } from '../shared/format.ts';
 import { groupContainers, isUp, label, needsAttention, notUpLine, portUrl, stateLine, toneOf, type Stack } from '../shared/stacks.ts';
 import type { Container, Snapshot } from '../shared/types.ts';
@@ -21,13 +22,13 @@ type RowView = {
 };
 
 const containerMenu = (row: Container): MenuItem[] => {
-  const items: MenuItem[] = [{ id: 'logs', label: 'Logs' }];
-  if (row.state === 'running') items.push({ id: 'files', label: 'Files' }, { id: 'shell', label: 'Shell' });
-  items.push({ id: 'inspect', label: 'Inspect' }, { separator: true });
-  if (row.state === 'running') items.push({ id: 'restart', label: 'Restart' }, { id: 'pause', label: 'Pause' }, { id: 'stop', label: 'Stop' });
-  else if (row.state === 'paused') items.push({ id: 'unpause', label: 'Resume' }, { id: 'stop', label: 'Stop' });
-  else if (row.state === 'restarting') items.push({ id: 'stop', label: 'Stop' });
-  else items.push({ id: 'start', label: 'Start' });
+  const items: MenuItem[] = [{ id: 'logs', label: t('Logs') }];
+  if (row.state === 'running') items.push({ id: 'files', label: t('Files') }, { id: 'shell', label: t('Shell') });
+  items.push({ id: 'inspect', label: t('Inspect') }, { separator: true });
+  if (row.state === 'running') items.push({ id: 'restart', label: t('Restart') }, { id: 'pause', label: t('Pause') }, { id: 'stop', label: t('Stop') });
+  else if (row.state === 'paused') items.push({ id: 'unpause', label: t('Resume') }, { id: 'stop', label: t('Stop') });
+  else if (row.state === 'restarting') items.push({ id: 'stop', label: t('Stop') });
+  else items.push({ id: 'start', label: t('Start') });
   items.push({ separator: true }, { id: 'remove', label: 'Remove…', destructive: true });
   return items;
 };
@@ -109,7 +110,7 @@ const createRow = (app: App, initial: Container): RowView => {
       ports.replaceChildren(...next.ports.slice(0, 3).map((port) => {
         const chip = el('button', port.protocol === 'tcp' ? 'port' : 'port plain', `:${port.hostPort}`);
         chip.type = 'button';
-        chip.title = port.protocol === 'tcp' ? `Open ${portUrl(port)} (container port ${port.containerPort})` : `${port.hostPort} → ${port.containerPort}/${port.protocol}`;
+        chip.title = port.protocol === 'tcp' ? t(`Open ${portUrl(port)} (container port ${port.containerPort})`) : `${port.hostPort} → ${port.containerPort}/${port.protocol}`;
         chip.addEventListener('click', (event) => {
           event.stopPropagation();
           if (port.protocol === 'tcp') app.openUrl(portUrl(port));

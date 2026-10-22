@@ -3,6 +3,7 @@
 import type { HostClient } from '@openchamber/sdk';
 
 import { el } from '../shared/dom.ts';
+import { t } from '../shared/i18n.ts';
 import type { Container, Job, Snapshot } from '../shared/types.ts';
 import type { Diagnoses } from './diagnosis.ts';
 
@@ -41,7 +42,7 @@ export const armButton = (label: string, question: string, onConfirm: () => void
   let timer: ReturnType<typeof setTimeout> | undefined;
   const disarm = (): void => {
     button.classList.remove('armed');
-    button.textContent = label;
+    button.textContent = t(label);
     delete button.dataset.armed;
   };
   button.addEventListener('click', (event) => {
@@ -50,7 +51,7 @@ export const armButton = (label: string, question: string, onConfirm: () => void
     if (!button.dataset.armed) {
       button.dataset.armed = '1';
       button.classList.add('armed');
-      button.textContent = question;
+      button.textContent = t(question);
       clearTimeout(timer);
       timer = setTimeout(disarm, 4_000);
       return;

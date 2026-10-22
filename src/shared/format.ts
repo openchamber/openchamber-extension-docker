@@ -1,7 +1,10 @@
 // Numbers and times, shared by every frame.
+import { isZh, setLocale as setI18nLocale } from './i18n.ts';
+
 let locale = 'en';
 export const setLocale = (next: string): void => {
   locale = next || 'en';
+  setI18nLocale(locale);
 };
 
 const number = (value: number, digits: number): string => new Intl.NumberFormat(locale, {
@@ -44,11 +47,11 @@ export const formatPercent = (value: number | null): string => {
 
 const span = (ms: number): string => {
   const minutes = Math.floor(ms / 60_000);
-  if (minutes < 1) return 'seconds';
-  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 1) return isZh() ? '秒' : 'seconds';
+  if (minutes < 60) return isZh() ? `${minutes} 分钟` : `${minutes} min`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `${hours} h`;
-  return `${Math.floor(hours / 24)} days`;
+  if (hours < 48) return isZh() ? `${hours} 小时` : `${hours} h`;
+  return isZh() ? `${Math.floor(hours / 24)} 天` : `${Math.floor(hours / 24)} days`;
 };
 
 /** "2 min ago", from an RFC 3339 time. */
@@ -56,7 +59,8 @@ export const ago = (iso: string | null, now = Date.now()): string => {
   const at = iso ? Date.parse(iso) : Number.NaN;
   if (!Number.isFinite(at)) return '';
   const value = span(now - at);
-  return value === 'seconds' ? 'just now' : `${value} ago`;
+  if (value === 'seconds' || value === '秒') return isZh() ? '刚刚' : 'just now';
+  return isZh() ? `${value}前` : `${value} ago`;
 };
 
 /** "2 h", how long since an RFC 3339 time. */
@@ -65,4 +69,14 @@ export const since = (iso: string | null, now = Date.now()): string => {
   return Number.isFinite(at) ? span(now - at) : '';
 };
 
-export const plural = (count: number, one: string, many = `${one}s`): string => `${count} ${count === 1 ? one : many}`;
+const ZH_NOUNS: Record<string, string> = {
+  container: '个容器',
+  'unused image': '个未使用的镜像',
+  'unused volume': '个未使用的卷',
+  'stopped container': '个已停止的容器',
+};
+
+export const plural = (count: number, one: string, many = `${one}s`): string => {
+  if (isZh()) return `${count} ${ZH_NOUNS[one] ?? one}`;
+  return `${count} ${count === 1 ? one : many}`;
+};

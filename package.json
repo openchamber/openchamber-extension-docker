@@ -1,6 +1,6 @@
 {
   "name": "openchamber-docker",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Docker for OpenChamber: your project's Compose stack first, live CPU and memory, logs, files, a shell, disk cleanup, and a one-line reason when a container crashes.",
   "private": true,
   "type": "module",
@@ -32,12 +32,20 @@
           "description": "Attach a container's state and recent logs"
         }
       ],
-      "capabilities": ["model"],
+      "capabilities": [
+        "model"
+      ],
       "service": {
         "entry": "service/main.js",
         "runtime": "host",
         "permissions": {
-          "exec": ["docker", "docker-compose", "colima", "orb", "open"]
+          "exec": [
+            "docker",
+            "docker-compose",
+            "colima",
+            "orb",
+            "open"
+          ]
         }
       },
       "attach": false

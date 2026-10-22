@@ -6,7 +6,7 @@ import { applyHostReady } from '@openchamber/sdk/ui';
 
 import { isDockerChipData } from '../shared/chip.ts';
 import { FAILURE_TEXT, failureOf, fetchSnapshot, getJson, isOnScreen, messageOf, onShown, type Failure } from '../shared/client.ts';
-import { el } from '../shared/dom.ts';
+import { el, localizeTree } from '../shared/dom.ts';
 import { setLocale } from '../shared/format.ts';
 import { BASE_STYLE, PANEL_STYLE } from '../shared/style.ts';
 import type { Incident, Job, Snapshot } from '../shared/types.ts';
@@ -156,6 +156,7 @@ const render = (): void => {
     next = home.element;
   }
   if (root.firstElementChild !== next) root.replaceChildren(next);
+  localizeTree(root);
 };
 
 // ----- Jobs -----
@@ -254,6 +255,7 @@ host.onDirectory((next) => {
 host.onReady((context: HostReadyContext) => {
   applyHostReady(context, document.documentElement);
   setLocale(context.locale);
+  localizeTree(document.body);
   directory = context.directory;
   if (started) return;
   render();

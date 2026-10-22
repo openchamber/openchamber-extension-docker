@@ -2,6 +2,7 @@
 import { HostRequestError, type HostClient } from '@openchamber/sdk';
 
 import type { Job, Snapshot } from './types.ts';
+import { t } from './i18n.ts';
 
 export type Failure = 'needs-approval' | 'paused' | 'service-failed' | 'unreachable';
 
@@ -58,9 +59,9 @@ export const postJson = <T>(host: HostClient, path: string, body: unknown): Prom
 
 /** A message for a toast from whatever a call threw. */
 export const messageOf = (error: unknown): string => {
-  if (error instanceof ServiceError) return error.message;
-  if (error instanceof HostRequestError) return FAILURE_TEXT[failureOf(error)];
-  return error instanceof Error ? error.message : 'Something went wrong.';
+  if (error instanceof ServiceError) return t(error.message);
+  if (error instanceof HostRequestError) return t(FAILURE_TEXT[failureOf(error)]);
+  return t(error instanceof Error ? error.message : 'Something went wrong.');
 };
 
 export const fetchSnapshot = (host: HostClient, directory: string | null, stats: boolean): Promise<Snapshot> => {

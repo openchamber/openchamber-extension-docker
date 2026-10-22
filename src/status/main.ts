@@ -4,7 +4,8 @@ import { connectHost, type GuestStatusControl } from '@openchamber/sdk';
 import { applyHostReady } from '@openchamber/sdk/ui';
 
 import { FAILURE_TEXT, failureOf, fetchSnapshot, isOnScreen, messageOf, onShown, postJob } from '../shared/client.ts';
-import { el } from '../shared/dom.ts';
+import { el, localizeTree } from '../shared/dom.ts';
+import { t } from '../shared/i18n.ts';
 import { formatBytes, setLocale } from '../shared/format.ts';
 import { groupContainers, label, notUpLine, portUrl, stateLine, toneOf, type Stack } from '../shared/stacks.ts';
 import { BASE_STYLE, STATUS_STYLE } from '../shared/style.ts';
@@ -46,17 +47,17 @@ const publishControls = (): void => {
   if (!controlsSupported) return;
   const controls: GuestStatusControl[] = [];
   if (snapshot && !snapshot.engine.running && snapshot.engine.start?.canRun && !snapshot.engine.starting) {
-    controls.push({ kind: 'button', id: 'start-engine', label: `Start ${snapshot.engine.name}` });
+    controls.push({ kind: 'button', id: 'start-engine', label: t(`Start ${snapshot.engine.name}`) });
   }
   const stack = snapshot?.engine.running ? projectStack() : null;
   const busy = stack ? snapshot?.jobs.some((job) => job.kind === 'stack' && job.target === stack.project && job.state === 'running') : false;
   if (stack && snapshot) {
     const compose = Boolean(snapshot.compose);
     if (stack.running === 0) {
-      if (compose || stack.containers.length > 0) controls.push({ kind: 'button', id: 'up', label: 'Up', disabled: busy });
+      if (compose || stack.containers.length > 0) controls.push({ kind: 'button', id: 'up', label: t('Up'), disabled: busy });
     } else {
-      controls.push({ kind: 'button', id: 'restart', label: 'Restart', disabled: busy });
-      controls.push({ kind: 'button', id: compose ? 'down' : 'stop', label: compose ? 'Down' : 'Stop', disabled: busy });
+      controls.push({ kind: 'button', id: 'restart', label: t('Restart'), disabled: busy });
+      controls.push({ kind: 'button', id: compose ? 'down' : 'stop', label: compose ? t('Down') : t('Stop'), disabled: busy });
     }
   }
   const key = JSON.stringify(controls);
@@ -89,7 +90,7 @@ const line = (tone: string, name: string, detail: HTMLElement | string, value: s
 const portChip = (port: PortBinding): HTMLElement => {
   const chip = el('button', 'port', `:${port.hostPort}`);
   chip.type = 'button';
-  chip.title = `Open ${portUrl(port)}`;
+  chip.title = t(`Open ${portUrl(port)}`);
   chip.addEventListener('click', () => {
     void host.openUrl(portUrl(port)).catch(() => undefined);
   });
@@ -127,6 +128,7 @@ const render = (): void => {
     }
   }
   root.replaceChildren(...nodes);
+  localizeTree(root);
   publishControls();
 };
 
@@ -178,6 +180,7 @@ let started = false;
 host.onReady((context) => {
   applyHostReady(context, document.documentElement);
   setLocale(context.locale);
+  localizeTree(document.body);
   controlsSupported = context.features?.statusControls === true;
   directory = context.directory;
   if (started) return;
