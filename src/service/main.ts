@@ -20,6 +20,7 @@ import { CommandError, isContainerRef } from './docker.ts';
 import { AnswerError, execCommand, inspect, listDir, normalizeContainerPath, readFile, readLogs } from './inside.ts';
 import { Monitor } from './monitor.ts';
 import { normalizeTimestamp } from './parse.ts';
+import { projectStack, statusView } from './status-view.ts';
 import { readStorage } from './storage.ts';
 import type { PruneKind } from '../shared/types.ts';
 
@@ -87,6 +88,40 @@ const route = async ({ method, path, query, body }: Request): Promise<Reply> => 
   if (method === 'GET' && first === 'snapshot') {
     await monitor.touch(query.get('stats') === '1');
     return ok(await monitor.snapshot(query.get('directory') || null));
+  }
+
+  // The Work Status section OpenChamber draws itself (status-view.ts).
+  if (first === 'status' && !second) {
+    const directory = query.get('directory') || null;
+    if (method === 'GET') {
+      // On screen, like a visible frame: stats stream while it is read.
+      await monitor.touch(true);
+      return ok(statusView(await monitor.snapshot(directory), query.get('locale') ?? 'en'));
+    }
+    if (method === 'POST') {
+      // OpenChamber shows `message` from a refused control in its error toast.
+      const refuse = (status: number, message: string): Reply => ({ status, body: { message } });
+      try {
+        const id = str(body.id);
+        if (id === 'start-engine') {
+          await monitor.touch(false);
+          const snapshot = await monitor.snapshot(null);
+          if (snapshot.engine.running) return refuse(409, `${snapshot.engine.name} is already running.`);
+          return ok({ job: startEngine(monitor, snapshot.engine.name) });
+        }
+        if (!(STACK_ACTIONS as readonly string[]).includes(id)) return refuse(400, 'Unknown control.');
+        await needsEngine();
+        const stack = projectStack(await monitor.snapshot(directory));
+        if (!stack) return refuse(404, 'This project has no Compose stack.');
+        return ok({
+          job: await stackAction(monitor, { action: id as StackAction, project: stack.project, workingDir: stack.workingDir, configFiles: stack.configFiles }),
+        });
+      } catch (error) {
+        if (error instanceof AnswerError) return refuse(error.status, error.message);
+        if (error instanceof CommandError) return refuse(502, error.message);
+        throw error;
+      }
+    }
   }
 
   if (method === 'GET' && first === 'incidents') {

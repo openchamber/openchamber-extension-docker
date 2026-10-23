@@ -1243,6 +1243,230 @@ var projectInfo = (directory) => {
   return info;
 };
 
+// src/shared/format.ts
+var locale = "en";
+var setLocale = (next) => {
+  try {
+    locale = Intl.NumberFormat.supportedLocalesOf(next)[0] ?? "en";
+  } catch {
+    locale = "en";
+  }
+};
+var number = (value, digits) => new Intl.NumberFormat(locale, {
+  minimumFractionDigits: digits,
+  maximumFractionDigits: digits
+}).format(value);
+var formatBytes = (bytes) => {
+  if (bytes === null)
+    return "–";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = Math.max(0, bytes);
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit += 1;
+  }
+  const digits = unit >= 3 && value < 100 ? 1 : 0;
+  return `${number(value, digits)} ${units[unit]}`;
+};
+var span = (ms) => {
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 1)
+    return "seconds";
+  if (minutes < 60)
+    return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 48)
+    return `${hours} h`;
+  return `${Math.floor(hours / 24)} days`;
+};
+var ago = (iso, now = Date.now()) => {
+  const at = iso ? Date.parse(iso) : Number.NaN;
+  if (!Number.isFinite(at))
+    return "";
+  const value = span(now - at);
+  return value === "seconds" ? "just now" : `${value} ago`;
+};
+var since = (iso, now = Date.now()) => {
+  const at = iso ? Date.parse(iso) : Number.NaN;
+  return Number.isFinite(at) ? span(now - at) : "";
+};
+
+// src/shared/stacks.ts
+var inside = (path, directory) => path === directory || path.startsWith(`${directory.replace(/\/+$/, "")}/`);
+var isProjectStack = (stack, project) => {
+  if (!project)
+    return false;
+  if (stack.workingDir)
+    return inside(stack.workingDir, project.directory);
+  return stack.project === project.name;
+};
+var byName = (a, b) => label(a).localeCompare(label(b));
+var groupContainers = (containers, project) => {
+  const stacks = new Map;
+  const standalone = [];
+  for (const row of containers) {
+    if (!row.compose) {
+      standalone.push(row);
+      continue;
+    }
+    let stack = stacks.get(row.compose.project);
+    if (!stack) {
+      stack = {
+        project: row.compose.project,
+        workingDir: row.compose.workingDir,
+        configFiles: row.compose.configFiles,
+        containers: [],
+        running: 0,
+        isProject: false
+      };
+      stacks.set(row.compose.project, stack);
+    }
+    stack.containers.push(row);
+    if (row.state === "running")
+      stack.running += 1;
+  }
+  const all = [...stacks.values()];
+  for (const stack of all) {
+    stack.containers.sort(byName);
+    stack.isProject = isProjectStack(stack, project);
+  }
+  const mine = all.filter((stack) => stack.isProject);
+  if (mine.length === 0 && project?.composeFile) {
+    mine.push({
+      project: project.name,
+      workingDir: project.directory,
+      configFiles: [`${project.directory.replace(/\/+$/, "")}/${project.composeFile}`],
+      containers: [],
+      running: 0,
+      isProject: true
+    });
+  }
+  return {
+    project: mine,
+    stacks: all.filter((stack) => !stack.isProject).sort((a, b) => b.running - a.running || a.project.localeCompare(b.project)),
+    standalone: standalone.sort((a, b) => Number(b.state === "running") - Number(a.state === "running") || byName(a, b))
+  };
+};
+var notUpLine = (stack, compose) => {
+  const file = stack.configFiles[0]?.split("/").pop() || "compose file";
+  return compose ? `${file} · not running` : `${file} · not running · install Docker Compose to start it`;
+};
+var label = (row) => row.compose?.service || row.name;
+var STOP_CODES = new Set([0, 130, 137, 143]);
+var isCrashed = (row) => (row.state === "exited" || row.state === "dead") && (row.oomKilled || row.exitCode !== null && !STOP_CODES.has(row.exitCode));
+var needsAttention = (row) => isCrashed(row) || row.state === "restarting" || row.health === "unhealthy";
+var toneOf = (row) => {
+  if (needsAttention(row))
+    return "bad";
+  if (row.state === "running")
+    return row.health === "starting" ? "warn" : "ok";
+  if (row.state === "paused")
+    return "warn";
+  return "off";
+};
+var stateLine = (row, now = Date.now()) => {
+  switch (row.state) {
+    case "running": {
+      const up = since(row.startedAt, now);
+      if (up === "seconds")
+        return "just started";
+      return up ? `up ${up}` : "running";
+    }
+    case "restarting":
+      return row.restartCount > 0 ? `restarting · ${row.restartCount} restarts` : "restarting";
+    case "paused":
+      return "paused";
+    case "created":
+      return "created, never started";
+    case "removing":
+      return "being removed";
+    default: {
+      const when = ago(row.finishedAt, now);
+      const code = row.oomKilled ? "out of memory" : `exited (${row.exitCode ?? "?"})`;
+      return when ? `${code} ${when}` : code;
+    }
+  }
+};
+var portUrl = (port) => {
+  const wildcard = port.hostIp === "0.0.0.0" || port.hostIp === "::" || port.hostIp === "";
+  const hostName = wildcard ? "localhost" : port.hostIp.includes(":") ? `[${port.hostIp}]` : port.hostIp;
+  return `http://${hostName}:${port.hostPort}`;
+};
+
+// src/service/status-view.ts
+var SHOWN = 6;
+var PORTS_SHOWN = 3;
+var TONE = { ok: "success", warn: "warning", bad: "error", off: "muted" };
+var projectStack = (snapshot) => groupContainers(snapshot.containers, snapshot.project).project[0] ?? null;
+var stackJob = (snapshot, stack, state) => snapshot.jobs.find((job) => job.kind === "stack" && job.target === stack.project && job.state === state);
+var controlsFor = (snapshot, stack) => {
+  const { engine } = snapshot;
+  if (!engine.running) {
+    return engine.start?.canRun && !engine.starting ? [{ kind: "button", id: "start-engine", label: `Start ${engine.name}` }] : [];
+  }
+  if (!stack)
+    return [];
+  const busy = Boolean(stackJob(snapshot, stack, "running"));
+  const compose = Boolean(snapshot.compose);
+  if (stack.running === 0) {
+    return compose || stack.containers.length > 0 ? [{ kind: "button", id: "up", label: "Up", disabled: busy }] : [];
+  }
+  return [
+    { kind: "button", id: "restart", label: "Restart", disabled: busy },
+    { kind: "button", id: compose ? "down" : "stop", label: compose ? "Down" : "Stop", disabled: busy }
+  ];
+};
+var failureNote = (snapshot, stack) => {
+  const failed = stackJob(snapshot, stack, "failed");
+  if (!failed)
+    return null;
+  const last = failed.output.split(`
+`).map((text) => text.trim()).filter(Boolean).pop() ?? "It failed.";
+  return { kind: "note", id: "job-failed", text: `${failed.label} failed: ${last}`, tone: "error" };
+};
+var statusView = (snapshot, locale, now = Date.now()) => {
+  setLocale(locale);
+  const { engine } = snapshot;
+  if (!engine.running) {
+    const text = engine.starting ? `Starting ${engine.name}…` : engine.cliMissing ? "Docker isn't installed." : `${engine.name} isn't running.`;
+    return { rows: [{ kind: "note", id: "engine", text }], controls: controlsFor(snapshot, null) };
+  }
+  const stack = projectStack(snapshot);
+  if (!stack) {
+    return { rows: [{ kind: "note", id: "empty", text: "No Compose file or containers for this project." }], controls: [] };
+  }
+  const rows = [];
+  const running = stackJob(snapshot, stack, "running");
+  if (running)
+    rows.push({ kind: "note", id: "job", text: `${running.label}…` });
+  const failed = failureNote(snapshot, stack);
+  if (failed)
+    rows.push(failed);
+  if (stack.containers.length === 0) {
+    if (!running)
+      rows.push({ kind: "note", id: "not-up", text: notUpLine(stack, Boolean(snapshot.compose)) });
+    return { rows, controls: controlsFor(snapshot, stack) };
+  }
+  for (const row of stack.containers.slice(0, SHOWN)) {
+    const isRunning = row.state === "running";
+    const ports = row.ports.filter((port) => port.protocol === "tcp").slice(0, PORTS_SHOWN);
+    const tone = toneOf(row);
+    rows.push({
+      kind: "line",
+      id: `container-${row.id.slice(0, 12)}`,
+      label: label(row),
+      dot: TONE[tone],
+      content: isRunning && ports.length > 0 ? { kind: "chips", chips: ports.map((port) => ({ id: `port-${port.hostPort}`, label: `:${port.hostPort}`, url: portUrl(port) })) } : { kind: "text", text: stateLine(row, now), tone: tone === "bad" ? "error" : "muted" },
+      ...isRunning ? { value: formatBytes(row.memory) } : {}
+    });
+  }
+  if (stack.containers.length > SHOWN) {
+    rows.push({ kind: "note", id: "more", text: `+${stack.containers.length - SHOWN} more in the Docker panel` });
+  }
+  return { rows, controls: controlsFor(snapshot, stack) };
+};
+
 // src/service/main.ts
 var port = Number(process.env.OPENCHAMBER_SERVICE_PORT);
 var token = process.env.OPENCHAMBER_SERVICE_TOKEN ?? "";
@@ -1299,6 +1523,41 @@ var route = async ({ method, path, query, body }) => {
   if (method === "GET" && first === "snapshot") {
     await monitor.touch(query.get("stats") === "1");
     return ok(await monitor.snapshot(query.get("directory") || null));
+  }
+  if (first === "status" && !second) {
+    const directory = query.get("directory") || null;
+    if (method === "GET") {
+      await monitor.touch(true);
+      return ok(statusView(await monitor.snapshot(directory), query.get("locale") ?? "en"));
+    }
+    if (method === "POST") {
+      const refuse = (status, message) => ({ status, body: { message } });
+      try {
+        const id = str(body.id);
+        if (id === "start-engine") {
+          await monitor.touch(false);
+          const snapshot = await monitor.snapshot(null);
+          if (snapshot.engine.running)
+            return refuse(409, `${snapshot.engine.name} is already running.`);
+          return ok({ job: startEngine(monitor, snapshot.engine.name) });
+        }
+        if (!STACK_ACTIONS.includes(id))
+          return refuse(400, "Unknown control.");
+        await needsEngine();
+        const stack = projectStack(await monitor.snapshot(directory));
+        if (!stack)
+          return refuse(404, "This project has no Compose stack.");
+        return ok({
+          job: await stackAction(monitor, { action: id, project: stack.project, workingDir: stack.workingDir, configFiles: stack.configFiles })
+        });
+      } catch (error) {
+        if (error instanceof AnswerError)
+          return refuse(error.status, error.message);
+        if (error instanceof CommandError)
+          return refuse(502, error.message);
+        throw error;
+      }
+    }
   }
   if (method === "GET" && first === "incidents") {
     await monitor.touch(false, true);

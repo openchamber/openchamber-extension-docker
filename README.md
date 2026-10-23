@@ -8,7 +8,7 @@ When a container crashes or turns unhealthy, a line under it says why, read from
 
 - **The panel.** Click a container for its Logs, Files, Shell and Inspect. Logs follow live, filter, and copy; Files browses the container and opens text files; Shell runs one command at a time in the folder the last one left, with `cd` carrying over; Inspect shows ports, networks, mounts and environment, with values that look like secrets hidden until clicked.
 - **Storage.** Disk space by images, build cache, volumes and stopped containers, a cleanup for each, and the images, volumes and networks themselves. Pull an image from here. Everything that deletes asks once on the button before it runs.
-- **Work Status.** A section in the chat's Work Status panel with the open project's stack, and Up, Restart and Down in its header.
+- **Work Status.** A section in the chat's Work Status panel with the open project's stack, and Up, Restart and Down in its header. OpenChamber versions that draw extension sections themselves build it from the service's `/status` answer, with no page of its own; older ones load `status/index.html`.
 - **`/docker <name>`.** Attaches a container's state and its last 200 log lines to your message, so the agent reads what you see. Without a name it picks the project's container that crashed. "Attach to chat" in the Logs tab does the same.
 - **Docker not running.** The panel says which engine the docker CLI uses (Colima, Docker Desktop, OrbStack, Rancher Desktop, Podman) and starts it with one click when it can.
 

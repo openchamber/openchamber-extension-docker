@@ -1,6 +1,6 @@
 {
   "name": "openchamber-docker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Docker for OpenChamber: your project's Compose stack first, live CPU and memory, logs, files, a shell, disk cleanup, and a one-line reason when a container crashes.",
   "private": true,
   "type": "module",
@@ -19,6 +19,10 @@
       },
       "statusSection": {
         "entry": "status/index.html",
+        "source": {
+          "path": "/status",
+          "interval": 3000
+        },
         "title": "Docker",
         "height": 72,
         "requiresProject": true
